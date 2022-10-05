@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./lib/jquery.js"></script>
+    <script src="./lib/template-web.js"></script>
+</head>
+
+<body>
+    <div id="container"></div>
+    <!-- 定义要渲染的模板 -->
+    <script id="tpl-user" type="text/html">
+        <h2>{{name}} ------ {{age}}</h2>
+        <h3>{{regTime | dateFormat}}</h3>
+    </script>
+    <!-- 渲染数据 -->
+    <script>
+        // 定义一个时间过滤器函数
+        template.defaults.imports.dateFormat = function (date) {
+            var y = date.getFullYear()
+            var m = date.getMonth() + 1
+            var d = date.getDate()
+            return y + '-' + m + '-' + d
+        }
+        // 定义要渲染的数据
+        var data = { name: 'zhangsan', age: 20, regTime: new Date() }
+        // 调用template函数
+        var htmlStr = template('tpl-user', data)
+        // 渲染数据
+        $('#container').html(htmlStr)
+        // document.querySelector('#container').innerHTML = htmlStr
+    </script>
+</body>
+
+</html>

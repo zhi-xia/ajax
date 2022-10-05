@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./lib/jquery.js"></script>
+    <link rel="stylesheet" href="./lib/bootstrap.min.css">
+    <!-- 导入模板引擎 -->
+    <script src="./lib/template-web.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/zh-lx/pinyin-pro@latest/dist/pinyin-pro.js"></script>
+    <style>
+        .box {
+            width: 400px;
+            margin: 100px auto;
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        #suggest-list li:hover {
+            background-color: #eee;
+            cursor: pointer;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none;
+            /* iOS Safari */
+
+            -webkit-user-select: none;
+            /* Chrome/Safari/Opera */
+
+            -khtml-user-select: none;
+            /*早期浏览器*/
+
+            -moz-user-select: none;
+            /* Firefox */
+
+            -ms-user-select: none;
+            /* Internet Explorer/Edge */
+
+            user-select: none;
+            /* Non-prefixed version, currently not supported by any browser */
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <div class="input-group">
+            <input type="text" class="form-control" id="ipt" placeholder="要搜索的宝贝" spellcheck="false" autofocus="true">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default" style="outline: 0;">搜索</button>
+            </span>
+        </div>
+        <!-- 定义搜索列表 -->
+        <ul class="list-group noselect" id="suggest-list"></ul>
+    </div>
+
+
+    <!-- 定义模板 -->
+    <script type="text/html" id="tpl-suggestList">
+        {{each result}}
+        <li class="list-group-item">{{$value[0]}}</li>
+        {{/each}}
+    </script>
+
+    <script>
+        $(function () {
+            // 定义一个定时器
+            var timer = null
+            // 定义全局缓存对象
+            var cacheObj = {}
+            // 定义一个防抖函数
+            function debounceSearch(kw) {
+                timer = setTimeout(function () {
+                    getSuggestList(kw)
+                }, 300)
+            }
+
+            var { pinyin } = pinyinPro;
+            $('#ipt').on('keyup', function () {
+                // 清理定时器
+                clearTimeout(timer)
+                var keywords = pinyin($(this).val().trim(), { toneType: 'none' }).split(' ').join('')
+                // console.log(keywords);
+                if (keywords.length <= 0) {
+                    return $('#suggest-list').empty().hide()
+                }
+                // 看是否有缓存 有就直接渲染
+                if (cacheObj[keywords]) {
+                    return renderSuggestList(keywords, cacheObj[keywords])
+                }
+                debounceSearch(keywords)
+            })
+
+            // 获取建议搜索列表函数
+            function getSuggestList(kw) {
+                $.ajax({
+                    url: 'https://suggest.taobao.com/sug?q=' + kw,
+                    dataType: 'jsonp',
+                    success: function (res) {
+                        // console.log(res);
+                        renderSuggestList(kw, res)
+                    }
+                })
+            }
+            // 渲染建议列表函数
+            function renderSuggestList(kw, res) {
+                if (res.result.length <= 0) {
+                    return $('#suggest-list').empty().hide()
+                }
+                var htmlStr = template('tpl-suggestList', res)
+                $('#suggest-list').html(htmlStr).show()
+
+                // 缓存数据
+                cacheObj[kw] = res
+            }
+        })
+    </script>
+</body>
+
+</html>
